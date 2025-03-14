@@ -138,9 +138,26 @@ const Dashboard: React.FC = () => {
   return (
     <Layout>
       <Container maxWidth="lg">
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1">
-            Welcome, {authState.user?.username || 'Musician'}!
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 5,
+          mt: 2,
+          borderBottom: '2px solid #1976d2',
+          paddingBottom: 2
+        }}>
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 600, 
+              fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              color: '#1976d2',
+              letterSpacing: '0.5px'
+            }}
+          >
+            {authState.user?.username || 'Musician'}'s Workstation
           </Typography>
           <Box>
             <Tooltip title="Refresh Dashboard">
@@ -164,10 +181,6 @@ const Dashboard: React.FC = () => {
           </Alert>
         )}
 
-        {/* Project Overview Section */}
-        <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4, mb: 2 }}>
-          Project Overview
-        </Typography>
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} md={8}>
             <Paper elevation={2} sx={{ p: 2, height: '100%' }}>
