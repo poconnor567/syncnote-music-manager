@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
+import ProjectDetail from './pages/ProjectDetail';
 
 // Create a theme
 const theme = createTheme({
@@ -59,6 +60,7 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects/:projectId" element={<ProjectDetail />} />
               {/* Add more protected routes here */}
             </Route>
             
