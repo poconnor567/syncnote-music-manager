@@ -10,6 +10,12 @@ exports.createFolder = async (req, res) => {
     const { name, parentId } = req.body;
     const { projectId } = req.params;
     
+    console.log('Creating folder:', { name, parentId, projectId });
+    
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Folder name is required' });
+    }
+    
     // Check if project exists and user has access
     const project = await Project.findById(projectId);
     if (!project) {
@@ -36,11 +42,13 @@ exports.createFolder = async (req, res) => {
     
     // Create folder
     const folder = await Folder.create({
-      name,
+      name: name.trim(),
       project: projectId,
       parent: parentId || null,
       createdBy: req.user._id
     });
+    
+    console.log('Folder created:', folder);
     
     // Update parent folder if parentId is provided
     if (parentId) {
@@ -50,11 +58,16 @@ exports.createFolder = async (req, res) => {
     } else {
       // Add to project's root folders if no parent
       await Project.findByIdAndUpdate(projectId, {
-        $push: { folders: folder._id }
+        $push: { folders: folder }
       });
     }
     
-    res.status(201).json(folder);
+    // Return the complete folder data
+    const populatedFolder = await Folder.findById(folder._id)
+      .populate('files')
+      .populate('subfolders');
+    
+    res.status(201).json(populatedFolder);
   } catch (error) {
     console.error('Create folder error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -96,16 +109,35 @@ exports.getFolders = async (req, res) => {
 // @access  Private
 exports.getFolderById = async (req, res) => {
   try {
+    console.log('Getting folder by ID:', req.params.id);
+    
     const folder = await Folder.findById(req.params.id)
-      .populate('files')
-      .populate('subfolders');
+      .populate({
+        path: 'files',
+        select: 'name type size tags uploadDate createdAt updatedAt'
+      })
+      .populate({
+        path: 'subfolders',
+        select: 'name files createdAt updatedAt'
+      })
+      .populate({
+        path: 'project',
+        select: 'name owner'
+      });
     
     if (!folder) {
+      console.log('Folder not found');
       return res.status(404).json({ message: 'Folder not found' });
     }
     
+    console.log('Found folder:', folder.name);
+    
     // Check if user has access to the project
-    const project = await Project.findById(folder.project);
+    const project = folder.project;
+    if (!project) {
+      return res.status(404).json({ message: 'Associated project not found' });
+    }
+    
     if (project.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to access this folder' });
     }

@@ -16,24 +16,8 @@ const ProjectSchema = new mongoose.Schema({
     trim: true
   },
   folders: [{
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    parent: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Folder',
-      default: null
-    },
-    files: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'File'
-    }],
-    subfolders: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Folder'
-    }]
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Folder'
   }],
   createdAt: {
     type: Date,

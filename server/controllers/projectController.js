@@ -12,7 +12,8 @@ exports.createProject = async (req, res) => {
     const project = await Project.create({
       name,
       description,
-      owner: req.user._id
+      owner: req.user._id,
+      folders: [] // Initialize with empty folders array
     });
     
     // Create root folder for the project
@@ -24,10 +25,17 @@ exports.createProject = async (req, res) => {
     });
     
     // Add root folder to project
-    project.folders.push(rootFolder);
+    project.folders.push(rootFolder._id);
     await project.save();
     
-    res.status(201).json(project);
+    // Return populated project
+    const populatedProject = await Project.findById(project._id)
+      .populate({
+        path: 'folders',
+        select: 'name files subfolders parent createdAt updatedAt'
+      });
+    
+    res.status(201).json(populatedProject);
   } catch (error) {
     console.error('Create project error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -56,16 +64,14 @@ exports.getProjectById = async (req, res) => {
     const project = await Project.findById(req.params.id)
       .populate({
         path: 'folders',
-        populate: {
-          path: 'files'
-        }
+        select: 'name files subfolders parent createdAt updatedAt'
       });
     
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
     
-    // Check if user is owner
+    // Check if user is owner of the project
     if (project.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
       return res.status(403).json({ message: 'Not authorized to access this project' });
     }
@@ -99,7 +105,9 @@ exports.updateProject = async (req, res) => {
     project.name = name || project.name;
     project.description = description || project.description;
     
+    // Save the updated project
     const updatedProject = await project.save();
+    
     res.json(updatedProject);
   } catch (error) {
     console.error('Update project error:', error);
@@ -130,7 +138,7 @@ exports.deleteProject = async (req, res) => {
     // Delete the project
     await project.deleteOne();
     
-    res.json({ message: 'Project removed' });
+    res.json({ message: 'Project deleted successfully' });
   } catch (error) {
     console.error('Delete project error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -63,7 +63,19 @@ const ProjectDetail: React.FC = () => {
     try {
       setLoading(true);
       const projectData = await projectsAPI.getProjectById(id);
+      
+      // Ensure project data is properly populated
+      console.log('Project data:', projectData);
+      
+      // If folders are not populated, fetch them separately
+      if (projectData.folders && projectData.folders.length > 0 && typeof projectData.folders[0] === 'string') {
+        const foldersData = await foldersAPI.getFolders(id);
+        projectData.folders = foldersData.filter(folder => !folder.parent);
+      }
+      
       setProject(projectData);
+      setCurrentFolder(null);
+      setFolderPath([]);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch project details');
@@ -76,25 +88,47 @@ const ProjectDetail: React.FC = () => {
   const handleFolderClick = async (folder: Folder) => {
     try {
       setLoading(true);
+      console.log('Clicking folder:', folder);
+      
+      // Make sure we have a valid folder ID
+      if (!folder._id) {
+        throw new Error('Invalid folder ID');
+      }
+      
       const folderData = await foldersAPI.getFolderById(folder._id);
+      console.log('Folder data:', folderData);
+      
+      if (!folderData) {
+        throw new Error('Folder not found');
+      }
+      
       setCurrentFolder(folderData);
       
       // Update folder path
       if (folderData.parent) {
         // If it's a subfolder, we need to build the path
-        // This is a simplified approach - in a real app, you might need to fetch the full path
-        const parentFolder = typeof folderData.parent === 'string' 
-          ? await foldersAPI.getFolderById(folderData.parent)
-          : folderData.parent;
-        
-        setFolderPath([...folderPath, parentFolder]);
+        try {
+          const parentId = typeof folderData.parent === 'string' 
+            ? folderData.parent
+            : folderData.parent._id;
+          
+          const parentFolder = await foldersAPI.getFolderById(parentId);
+          setFolderPath([parentFolder]);
+        } catch (err) {
+          console.error('Error fetching parent folder:', err);
+          // Continue even if we can't build the full path
+          setFolderPath([]);
+        }
       } else {
         // If it's a top-level folder, reset the path
         setFolderPath([]);
       }
+      
+      setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch folder details');
       console.error('Error fetching folder details:', err);
+      // Don't reset current folder on error to allow user to try again
     } finally {
       setLoading(false);
     }
@@ -453,31 +487,38 @@ const ProjectDetail: React.FC = () => {
                     Folders
                   </Typography>
                   <Grid container spacing={2}>
-                    {project.folders.map((folder) => (
-                      <Grid item xs={12} sm={6} md={4} key={folder._id}>
-                        <Paper 
-                          variant="outlined" 
-                          sx={{ 
-                            p: 2, 
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: 'action.hover' }
-                          }}
-                          onClick={() => handleFolderClick(folder)}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <FolderIcon color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="body1" noWrap>
-                              {folder.name}
-                            </Typography>
-                          </Box>
-                          {folder.files && folder.files.length > 0 && (
-                            <Typography variant="caption" color="text.secondary">
-                              {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
-                            </Typography>
-                          )}
-                        </Paper>
-                      </Grid>
-                    ))}
+                    {project.folders.map((folder) => {
+                      // Ensure folder is a complete object with _id
+                      if (!folder || typeof folder === 'string') {
+                        return null;
+                      }
+                      
+                      return (
+                        <Grid item xs={12} sm={6} md={4} key={folder._id}>
+                          <Paper 
+                            variant="outlined" 
+                            sx={{ 
+                              p: 2, 
+                              cursor: 'pointer',
+                              '&:hover': { bgcolor: 'action.hover' }
+                            }}
+                            onClick={() => handleFolderClick(folder)}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <FolderIcon color="primary" sx={{ mr: 1 }} />
+                              <Typography variant="body1" noWrap>
+                                {folder.name}
+                              </Typography>
+                            </Box>
+                            {folder.files && folder.files.length > 0 && (
+                              <Typography variant="caption" color="text.secondary">
+                                {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
+                              </Typography>
+                            )}
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
                   </Grid>
                 </Box>
               ) : (
