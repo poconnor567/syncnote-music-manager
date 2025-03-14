@@ -1,64 +1,45 @@
-# Music Project Manager
+# SyncNote - Music Project Manager
 
-A web application for managing music projects, including sheet music, MIDI files, and audio recordings. This application allows users to organize their musical projects in folders, upload various file types, and associate MIDI recordings with sheet music.
+SyncNote is a comprehensive web-based platform designed to streamline the workflow of musicians by providing a centralized system for managing sheet music, MIDI files, recordings, and practice notes.
 
 ## Features
 
-### User Management and Authentication
-- User registration and login with secure authentication
-- Password updates and account management
-- Admin functionality for user management
-
-### Project and File Management
-- Create and organize musical projects
-- Create folder hierarchies for organizing content
-- Upload various file types (PDF sheet music, MIDI files, MP3 audio)
-- Rename, delete, and manage files and folders
-- Drag-and-drop file organization
-
-### MIDI Integration
-- Record MIDI tracks using connected MIDI devices
-- Associate MIDI recordings with specific sections of sheet music
-- Playback MIDI tracks alongside sheet music
-
-### Search and Cloud Storage
-- Search functionality by file name, tags, or type
-- Advanced filtering options
-- Cloud synchronization across devices
+- **Sheet Music Management**: Organize and annotate your sheet music in one central location
+- **MIDI Integration**: Seamlessly work with MIDI files alongside your sheet music
+- **Audio Recording Storage**: Store and organize your practice recordings and performances
+- **Centralized Project Management**: Keep all your musical assets organized by project
+- **Cross-Platform Access**: Access your music projects from any device with a web browser
+- **Streamlined Workflow**: Increase productivity with our intuitive, all-in-one interface
 
 ## Tech Stack
 
-- **Frontend**: React with TypeScript, Material UI
-- **Backend**: Node.js with Express
+- **Frontend**: React, TypeScript, Material-UI
+- **Backend**: Node.js, Express
 - **Database**: MongoDB
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **File Storage**: Local file system with cloud sync capabilities
+- **Authentication**: JWT (JSON Web Tokens)
+- **File Storage**: Local file system (with cloud storage options planned for future)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB (local or Atlas)
+- MongoDB
 - npm or yarn
 
 ### Installation
 
 1. Clone the repository
    ```
-   git clone <repository-url>
-   cd music-project-manager
+   git clone https://github.com/poconnor567/syncnote-music-manager.git
+   cd syncnote-music-manager
    ```
 
 2. Install dependencies
    ```
-   # Install server dependencies
-   cd server
    npm install
-
-   # Install client dependencies
-   cd ../client
-   npm install
+   cd client && npm install
+   cd ../server && npm install
    ```
 
 3. Set up environment variables
@@ -70,41 +51,35 @@ A web application for managing music projects, including sheet music, MIDI files
      NODE_ENV=development
      ```
 
-4. Start the development servers
+4. Start the development server
    ```
-   # Start the backend server
-   cd server
    npm run dev
-
-   # In a separate terminal, start the frontend
-   cd client
-   npm start
    ```
-
-5. Access the application
-   - Backend API: http://localhost:5000
-   - Frontend: http://localhost:3000
 
 ## Project Structure
 
-```
-music-project-manager/
-├── client/                 # React frontend
-│   ├── public/             # Static files
-│   └── src/                # React source code
-│       ├── components/     # UI components
-│       ├── pages/          # Page components
-│       ├── services/       # API services
-│       └── context/        # React context providers
-├── server/                 # Node.js backend
-│   ├── controllers/        # Route controllers
-│   ├── middleware/         # Express middleware
-│   ├── models/             # Mongoose models
-│   ├── routes/             # API routes
-│   └── uploads/            # Uploaded files storage
-└── README.md               # Project documentation
-```
+- `/client` - React frontend
+  - `/src` - Source code
+    - `/components` - Reusable UI components
+    - `/context` - React context providers
+    - `/pages` - Page components
+    - `/services` - API service functions
+    - `/types` - TypeScript type definitions
+- `/server` - Node.js backend
+  - `/controllers` - Request handlers
+  - `/middleware` - Express middleware
+  - `/models` - MongoDB models
+  - `/routes` - API routes
+  - `/uploads` - File storage directory
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Special thanks to all musicians who provided feedback during the development process 
