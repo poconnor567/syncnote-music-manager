@@ -70,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <MusicNoteIcon sx={{ mr: 1 }} />
           <Typography variant="h6" noWrap component="div">
-            SyncNote
+            Music Hub
           </Typography>
         </Box>
       </Toolbar>
