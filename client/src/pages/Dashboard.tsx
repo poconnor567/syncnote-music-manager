@@ -154,19 +154,7 @@ const Dashboard: React.FC = () => {
               fontWeight: 500, 
               fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
               color: '#1976d2',
-              letterSpacing: '0.7px',
-              position: 'relative',
-              paddingLeft: '0.5rem',
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                left: 0,
-                top: '15%',
-                height: '70%',
-                width: '4px',
-                backgroundColor: '#1976d2',
-                borderRadius: '4px'
-              }
+              letterSpacing: '0.7px'
             }}
           >
             {authState.user?.username || 'Musician'}'s Workstation
