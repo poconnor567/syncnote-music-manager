@@ -58,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
   const handleLogout = () => {
     logout();
     handleProfileMenuClose();
-    navigate('/login');
+    navigate('/');
   };
 
   const drawer = (

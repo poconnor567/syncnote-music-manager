@@ -14,24 +14,58 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
+  Chip,
+  IconButton,
+  Tooltip,
+  Avatar
 } from '@mui/material';
-import { Add as AddIcon, Folder as FolderIcon } from '@mui/icons-material';
+import { 
+  Add as AddIcon, 
+  Folder as FolderIcon, 
+  MusicNote as MusicNoteIcon,
+  AudioFile as AudioFileIcon,
+  PictureAsPdf as PdfIcon,
+  Search as SearchIcon,
+  Mic as MicIcon,
+  BarChart as BarChartIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { projectsAPI } from '../services/api';
-import { Project } from '../types';
+import { Project, Folder, FileItem } from '../types';
 import Layout from '../components/Layout/Layout';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard: React.FC = () => {
+  const { state: authState } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [recentFiles, setRecentFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
+  
+  // Project statistics
+  const totalProjects = projects.length;
+  const totalFiles = projects.reduce((acc, project) => {
+    const folderFiles = project.folders?.reduce((sum, folder) => sum + (folder.files?.length || 0), 0) || 0;
+    return acc + folderFiles;
+  }, 0);
+  const totalFolders = projects.reduce((acc, project) => acc + (project.folders?.length || 0), 0);
 
   useEffect(() => {
     fetchProjects();
+    // In a real implementation, you would fetch recent files from the API
+    setRecentFiles([]);
   }, []);
 
   const fetchProjects = async () => {
@@ -76,20 +110,52 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf':
+        return <PdfIcon color="error" />;
+      case 'midi':
+        return <MusicNoteIcon color="primary" />;
+      case 'mp3':
+        return <AudioFileIcon color="secondary" />;
+      default:
+        return <FolderIcon color="action" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Container maxWidth="lg">
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Dashboard
+          <Typography variant="h4" component="h1">
+            Welcome, {authState.user?.username || 'Musician'}!
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
-          >
-            New Project
-          </Button>
+          <Box>
+            <Tooltip title="Refresh Dashboard">
+              <IconButton onClick={fetchProjects} sx={{ mr: 1 }}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenDialog}
+            >
+              New Project
+            </Button>
+          </Box>
         </Box>
 
         {error && (
@@ -98,27 +164,201 @@ const Dashboard: React.FC = () => {
           </Alert>
         )}
 
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : projects.length === 0 ? (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              No projects yet
+        {/* Project Overview Section */}
+        <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Project Overview
+        </Typography>
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={8}>
+            <Paper elevation={2} sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6" gutterBottom>
+                Recent Projects
+              </Typography>
+              {projects.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 3 }}>
+                  <Typography variant="body1" color="textSecondary">
+                    No projects yet. Create your first music project to get started.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ mt: 2 }}
+                  >
+                    Create Project
+                  </Button>
+                </Box>
+              ) : (
+                <Grid container spacing={2}>
+                  {projects.slice(0, 3).map((project) => (
+                    <Grid item xs={12} sm={4} key={project._id}>
+                      <Card variant="outlined">
+                        <CardContent sx={{ pb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <FolderIcon color="primary" sx={{ mr: 1 }} />
+                            <Typography variant="subtitle1" noWrap>
+                              {project.name}
+                            </Typography>
+                          </Box>
+                          {project.description && (
+                            <Typography variant="body2" color="text.secondary" sx={{ 
+                              height: 40, 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical'
+                            }}>
+                              {project.description}
+                            </Typography>
+                          )}
+                        </CardContent>
+                        <CardActions>
+                          <Button 
+                            size="small" 
+                            component={Link} 
+                            to={`/projects/${project._id}`}
+                          >
+                            Open
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+              {projects.length > 0 && (
+                <Box sx={{ mt: 2, textAlign: 'right' }}>
+                  <Button component={Link} to="/projects">
+                    View All Projects
+                  </Button>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={2} sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6" gutterBottom>
+                Statistics
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemIcon>
+                    <FolderIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Total Projects" 
+                    secondary={totalProjects} 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <PdfIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Total Files" 
+                    secondary={totalFiles} 
+                  />
+                </ListItem>
+              </List>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Quick Actions Section */}
+        <Paper elevation={2} sx={{ p: 2, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Quick Actions
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={6} sm={3}>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                startIcon={<AddIcon />}
+                onClick={handleOpenDialog}
+                sx={{ py: 1 }}
+              >
+                New Project
+              </Button>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                startIcon={<PdfIcon />}
+                component={Link}
+                to="/upload"
+                sx={{ py: 1 }}
+              >
+                Upload Files
+              </Button>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                startIcon={<MicIcon />}
+                component={Link}
+                to="/record"
+                sx={{ py: 1 }}
+              >
+                Record MIDI
+              </Button>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                startIcon={<SearchIcon />}
+                component={Link}
+                to="/search"
+                sx={{ py: 1 }}
+              >
+                Search Files
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* MIDI Integration Section */}
+        <Paper elevation={2} sx={{ p: 2, mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            MIDI Integration
+          </Typography>
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <MusicNoteIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+            <Typography variant="body1" paragraph>
+              Connect your MIDI device to record and associate tracks with your sheet music.
             </Typography>
+            <Button 
+              variant="contained" 
+              startIcon={<MicIcon />}
+              component={Link}
+              to="/record"
+            >
+              Start Recording
+            </Button>
+          </Box>
+        </Paper>
+
+        {/* All Projects Section */}
+        <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          All Projects
+        </Typography>
+        {projects.length === 0 ? (
+          <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body1" color="textSecondary" paragraph>
-              Create your first music project to get started.
+              No projects yet. Create your first music project to get started.
             </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleOpenDialog}
-              sx={{ mt: 2 }}
             >
               Create Project
             </Button>
-          </Box>
+          </Paper>
         ) : (
           <Grid container spacing={3}>
             {projects.map((project) => (
@@ -143,6 +383,20 @@ const Dashboard: React.FC = () => {
                         {project.description}
                       </Typography>
                     )}
+                    <Box sx={{ mt: 1 }}>
+                      <Chip 
+                        size="small" 
+                        icon={<FolderIcon />} 
+                        label={`${project.folders?.length || 0} folders`} 
+                        sx={{ mr: 1, mb: 1 }} 
+                      />
+                      <Chip 
+                        size="small" 
+                        icon={<PdfIcon />} 
+                        label={`${project.folders?.reduce((sum, folder) => sum + (folder.files?.length || 0), 0) || 0} files`} 
+                        sx={{ mb: 1 }} 
+                      />
+                    </Box>
                   </CardContent>
                   <CardActions>
                     <Button 
@@ -151,6 +405,13 @@ const Dashboard: React.FC = () => {
                       to={`/projects/${project._id}`}
                     >
                       Open
+                    </Button>
+                    <Button 
+                      size="small" 
+                      component={Link} 
+                      to={`/projects/${project._id}/edit`}
+                    >
+                      Edit
                     </Button>
                   </CardActions>
                 </Card>
