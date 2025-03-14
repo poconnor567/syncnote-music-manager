@@ -63,10 +63,16 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          Music Manager
-        </Typography>
+      <Toolbar sx={{ 
+        background: 'linear-gradient(90deg, #1976d2 0%, #2196f3 100%)',
+        color: 'white'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <MusicNoteIcon sx={{ mr: 1 }} />
+          <Typography variant="h6" noWrap component="div">
+            SyncNote
+          </Typography>
+        </Box>
       </Toolbar>
       <Divider />
       <List>
@@ -119,6 +125,8 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          background: 'linear-gradient(90deg, #1976d2 0%, #2196f3 100%)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
         }}
       >
         <Toolbar>
@@ -131,9 +139,38 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Music Project Manager
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <MusicNoteIcon sx={{ mr: 1, fontSize: 28 }} />
+            <Box>
+              <Typography 
+                variant="h6" 
+                noWrap 
+                component="div" 
+                sx={{ 
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  fontSize: '1.3rem'
+                }}
+              >
+                SyncNote
+              </Typography>
+              <Typography 
+                variant="subtitle2" 
+                noWrap 
+                component="div" 
+                sx={{ 
+                  opacity: 0.9,
+                  fontStyle: 'italic',
+                  letterSpacing: '0.3px',
+                  fontSize: '0.75rem',
+                  mt: -0.5
+                }}
+              >
+                Streamlining your creative workflow
+              </Typography>
+            </Box>
+          </Box>
           {state.isAuthenticated ? (
             <>
               <IconButton
