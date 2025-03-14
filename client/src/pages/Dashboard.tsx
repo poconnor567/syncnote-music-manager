@@ -142,19 +142,31 @@ const Dashboard: React.FC = () => {
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
-          mb: 5,
+          mb: 4,
           mt: 2,
           borderBottom: '2px solid #1976d2',
           paddingBottom: 2
         }}>
           <Typography 
-            variant="h3" 
+            variant="h4" 
             component="h1" 
             sx={{ 
-              fontWeight: 600, 
+              fontWeight: 500, 
               fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
               color: '#1976d2',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.7px',
+              position: 'relative',
+              paddingLeft: '0.5rem',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: '15%',
+                height: '70%',
+                width: '4px',
+                backgroundColor: '#1976d2',
+                borderRadius: '4px'
+              }
             }}
           >
             {authState.user?.username || 'Musician'}'s Workstation
