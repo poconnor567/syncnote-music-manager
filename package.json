@@ -8,6 +8,9 @@
     "server": "cd server && npm run dev",
     "client": "cd client && npm start",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "fresh-dev": "./start-dev.sh",
+    "clean-dev": "node kill-ports.js",
+    "nuke-dev": "node kill-all-node.js",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

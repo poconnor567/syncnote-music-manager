@@ -29,11 +29,24 @@ const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const fileRoutes = require('./routes/files');
 
+// Create folder routes
+const router = express.Router();
+const { getFolderById, updateFolder, deleteFolder } = require('./controllers/folderController');
+const { protect } = require('./middleware/auth');
+
+// Folder routes
+router.use(protect);
+router.route('/:id')
+  .get(getFolderById)
+  .put(updateFolder)
+  .delete(deleteFolder);
+
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/folders', router);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
