@@ -233,6 +233,8 @@ const ProjectDetail: React.FC = () => {
   };
 
   const handleDeleteProject = async () => {
+    if (!project) return;
+
     if (!window.confirm(`Are you sure you want to delete the project "${project.name}"? This will permanently delete all folders and files in this project.`)) {
       return;
     }
