@@ -51,7 +51,9 @@ const ProjectDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openFolderDialog, setOpenFolderDialog] = useState(false);
+  const [openEditFolderDialog, setOpenEditFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
 
   useEffect(() => {
     if (projectId) {
@@ -191,6 +193,71 @@ const ProjectDetail: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Failed to create folder');
       console.error('Error creating folder:', err);
+    }
+  };
+
+  const handleOpenEditFolderDialog = (folder: Folder, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent folder click event
+    setEditingFolder(folder);
+    setNewFolderName(folder.name);
+    setOpenEditFolderDialog(true);
+  };
+
+  const handleCloseEditFolderDialog = () => {
+    setOpenEditFolderDialog(false);
+    setNewFolderName('');
+    setEditingFolder(null);
+  };
+
+  const handleUpdateFolder = async () => {
+    if (!editingFolder || !newFolderName.trim()) {
+      return;
+    }
+
+    try {
+      await foldersAPI.updateFolder(editingFolder._id, { name: newFolderName.trim() });
+      handleCloseEditFolderDialog();
+      
+      // Refresh data
+      if (currentFolder) {
+        await handleFolderClick(currentFolder);
+      } else {
+        await fetchProjectDetails(projectId!);
+      }
+      
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update folder');
+      console.error('Error updating folder:', err);
+    }
+  };
+
+  const handleDeleteFolder = async (folder: Folder, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent folder click event
+    
+    if (!window.confirm(`Are you sure you want to delete the folder "${folder.name}" and all its contents? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await foldersAPI.deleteFolder(folder._id);
+      
+      // Refresh data
+      if (currentFolder) {
+        if (currentFolder._id === folder._id) {
+          // If we're deleting the current folder, go back
+          handleBackToParentFolder();
+        } else {
+          await handleFolderClick(currentFolder);
+        }
+      } else {
+        await fetchProjectDetails(projectId!);
+      }
+      
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete folder');
+      console.error('Error deleting folder:', err);
     }
   };
 
@@ -356,9 +423,30 @@ const ProjectDetail: React.FC = () => {
             // Folder view
             <>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
-                  {currentFolder.name}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="h6">
+                    {currentFolder.name}
+                  </Typography>
+                  <Box sx={{ ml: 2 }}>
+                    <Tooltip title="Edit Folder">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleOpenEditFolderDialog(currentFolder, e)}
+                        sx={{ mr: 0.5 }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Folder">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleDeleteFolder(currentFolder, e)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
                 <Button
                   variant="outlined"
                   startIcon={<ArrowBackIcon />}
@@ -386,11 +474,32 @@ const ProjectDetail: React.FC = () => {
                           }}
                           onClick={() => handleFolderClick(subfolder)}
                         >
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <FolderIcon color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="body1" noWrap>
-                              {subfolder.name}
-                            </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                              <FolderIcon color="primary" sx={{ mr: 1, flexShrink: 0 }} />
+                              <Typography variant="body1" noWrap>
+                                {subfolder.name}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', ml: 1 }}>
+                              <Tooltip title="Edit">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleOpenEditFolderDialog(subfolder, e)}
+                                  sx={{ mr: 0.5 }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleDeleteFolder(subfolder, e)}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
                           </Box>
                         </Paper>
                       </Grid>
@@ -504,17 +613,40 @@ const ProjectDetail: React.FC = () => {
                             }}
                             onClick={() => handleFolderClick(folder)}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <FolderIcon color="primary" sx={{ mr: 1 }} />
-                              <Typography variant="body1" noWrap>
-                                {folder.name}
-                              </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                                <FolderIcon color="primary" sx={{ mr: 1, flexShrink: 0 }} />
+                                <Box sx={{ overflow: 'hidden' }}>
+                                  <Typography variant="body1" noWrap>
+                                    {folder.name}
+                                  </Typography>
+                                  {folder.files && folder.files.length > 0 && (
+                                    <Typography variant="caption" color="text.secondary" noWrap>
+                                      {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Box>
+                              <Box sx={{ display: 'flex', ml: 1 }}>
+                                <Tooltip title="Edit">
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => handleOpenEditFolderDialog(folder, e)}
+                                    sx={{ mr: 0.5 }}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => handleDeleteFolder(folder, e)}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
                             </Box>
-                            {folder.files && folder.files.length > 0 && (
-                              <Typography variant="caption" color="text.secondary">
-                                {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
-                              </Typography>
-                            )}
                           </Paper>
                         </Grid>
                       );
@@ -590,6 +722,34 @@ const ProjectDetail: React.FC = () => {
               disabled={!newFolderName.trim()}
             >
               Create
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Folder Dialog */}
+        <Dialog open={openEditFolderDialog} onClose={handleCloseEditFolderDialog}>
+          <DialogTitle>Edit Folder</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="Folder Name"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEditFolderDialog}>Cancel</Button>
+            <Button 
+              onClick={handleUpdateFolder} 
+              variant="contained"
+              disabled={!newFolderName.trim()}
+            >
+              Update
             </Button>
           </DialogActions>
         </Dialog>
