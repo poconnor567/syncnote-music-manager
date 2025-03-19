@@ -36,7 +36,9 @@ import {
   Search as SearchIcon,
   Mic as MicIcon,
   BarChart as BarChartIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { projectsAPI } from '../services/api';
@@ -107,6 +109,25 @@ const Dashboard: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Failed to create project');
       console.error('Error creating project:', err);
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!window.confirm('Are you sure you want to delete this project? This will permanently delete all folders and files in this project.')) {
+      return;
+    }
+
+    try {
+      await projectsAPI.deleteProject(projectId);
+      // Refresh the project list
+      fetchProjects();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete project');
+      console.error('Error deleting project:', err);
     }
   };
 
@@ -234,6 +255,23 @@ const Dashboard: React.FC = () => {
                           >
                             Open
                           </Button>
+                          <Tooltip title="Edit">
+                            <IconButton 
+                              size="small"
+                              component={Link}
+                              to={`/projects/${project._id}/edit`}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton 
+                              size="small"
+                              onClick={(e) => handleDeleteProject(project._id, e)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </CardActions>
                       </Card>
                     </Grid>
@@ -426,6 +464,13 @@ const Dashboard: React.FC = () => {
                     >
                       Edit
                     </Button>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleDeleteProject(project._id, e)}
+                      color="error"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </CardActions>
                 </Card>
               </Grid>

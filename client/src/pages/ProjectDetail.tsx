@@ -232,6 +232,21 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    if (!window.confirm(`Are you sure you want to delete the project "${project.name}"? This will permanently delete all folders and files in this project.`)) {
+      return;
+    }
+
+    try {
+      await projectsAPI.deleteProject(project._id);
+      // Navigate back to dashboard after successful deletion
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete project');
+      console.error('Error deleting project:', err);
+    }
+  };
+
   const handleDeleteFolder = async (folder: Folder, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent folder click event
     
@@ -362,6 +377,15 @@ const ProjectDetail: React.FC = () => {
                 sx={{ mr: 1 }}
               >
                 Edit Project
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteProject}
+                sx={{ mr: 1 }}
+              >
+                Delete Project
               </Button>
               <Button
                 variant="contained"
