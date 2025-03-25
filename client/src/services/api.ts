@@ -109,6 +109,27 @@ export const authAPI = {
       method: 'GET',
       url: '/auth/me',
     }),
+    
+  updateProfile: (userData: { username?: string; email?: string }) =>
+    request<User>({
+      method: 'PUT',
+      url: '/auth/update-profile',
+      data: userData,
+    }),
+    
+  changePassword: (passwordData: { currentPassword: string; newPassword: string }) =>
+    request<{ message: string }>({
+      method: 'PUT',
+      url: '/auth/change-password',
+      data: passwordData,
+    }),
+    
+  deleteAccount: (password: string) =>
+    request<{ message: string }>({
+      method: 'DELETE',
+      url: '/auth/delete-account',
+      data: { password },
+    }),
 };
 
 // Projects API

@@ -16,6 +16,8 @@ import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
 import ProjectDetail from './pages/ProjectDetail';
 import EditProject from './pages/EditProject';
+import Profile from './pages/Profile';
+import Projects from './pages/Projects';
 
 // Create a theme
 const theme = createTheme({
@@ -61,8 +63,11 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/projects/:projectId/edit" element={<EditProject />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Navigate to="/profile" replace />} />
               {/* Add more protected routes here */}
             </Route>
             
