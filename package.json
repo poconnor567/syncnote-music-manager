@@ -1,0 +1,33 @@
+{
+  "name": "music-project-manager",
+  "version": "1.0.0",
+  "description": "A web application for managing music projects",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "fresh-dev": "./start-dev.sh",
+    "clean-dev": "node kill-ports.js",
+    "nuke-dev": "node kill-all-node.js",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "music",
+    "project",
+    "management",
+    "midi",
+    "sheet-music"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1"
+  }
+}
