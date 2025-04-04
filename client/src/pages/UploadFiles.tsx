@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Container,
@@ -9,18 +9,27 @@ import {
   Tab,
   TextField,
   Button,
-  Divider,
   Alert,
-  IconButton
+  AlertTitle,
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  CircularProgress
 } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
   YouTube as YouTubeIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Folder as FolderIcon,
+  FolderOpen as FolderOpenIcon
 } from '@mui/icons-material';
 import Layout from '../components/Layout/Layout';
 import FileUpload from '../components/FileUpload/FileUpload';
-import { filesAPI } from '../services/api';
+import { filesAPI, projectsAPI, foldersAPI } from '../services/api';
+import { Project, Folder } from '../types';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -60,6 +69,56 @@ const UploadFiles: React.FC = () => {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [folderId, setFolderId] = useState<string | null>(null);
   
+  // Add new state for project and folder selection
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isFolderLoading, setIsFolderLoading] = useState<boolean>(false);
+  
+  // Define fetchProjects and fetchFolders before they are used in useEffect
+  const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
+    setSubmitError(null);
+    
+    try {
+      const response = await projectsAPI.getProjects();
+      setProjects(response);
+      
+      // If there's only one project, select it automatically
+      if (response.length === 1 && !projectId) {
+        setProjectId(response[0]._id);
+      }
+    } catch (error: any) {
+      console.error('Error fetching projects:', error);
+      setSubmitError('Failed to load projects. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId]);
+  
+  const fetchFolders = useCallback(async (projectId: string) => {
+    setIsFolderLoading(true);
+    setSubmitError(null);
+    
+    try {
+      const response = await foldersAPI.getFoldersByProject(projectId);
+      
+      // Filter out empty string folders (shouldn't happen, but just in case)
+      const validFolders = response.filter(folder => folder._id);
+      setFolders(validFolders);
+      
+      // If there's only one folder, select it automatically
+      if (validFolders.length === 1 && !folderId) {
+        setFolderId(validFolders[0]._id);
+      }
+    } catch (error: any) {
+      console.error('Error fetching folders:', error);
+      setSubmitError('Failed to load folders. Please try again.');
+    } finally {
+      setIsFolderLoading(false);
+    }
+  }, [folderId]);
+  
   // Extract query parameters
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -73,7 +132,29 @@ const UploadFiles: React.FC = () => {
     if (folderIdParam) {
       setFolderId(folderIdParam);
     }
-  }, [location]);
+    
+    // Fetch projects on component mount
+    fetchProjects();
+  }, [location, fetchProjects]);
+  
+  // Fetch folders when a project is selected
+  useEffect(() => {
+    if (projectId) {
+      fetchFolders(projectId);
+    } else {
+      setFolders([]);
+      setFolderId(null);
+    }
+  }, [projectId, fetchFolders]);
+  
+  const handleProjectChange = (event: SelectChangeEvent) => {
+    setProjectId(event.target.value);
+    setFolderId(null); // Reset folder selection when project changes
+  };
+  
+  const handleFolderChange = (event: SelectChangeEvent) => {
+    setFolderId(event.target.value);
+  };
   
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -156,24 +237,6 @@ const UploadFiles: React.FC = () => {
     }
   };
   
-  // If neither projectId nor folderId is provided, show error
-  if (!projectId && !folderId) {
-    return (
-      <Layout>
-        <Container maxWidth="md">
-          <Alert severity="error" sx={{ mt: 4 }}>
-            Missing project or folder ID. Please select a project or folder to upload files.
-          </Alert>
-          <Box sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={() => navigate('/projects')}>
-              Go to Projects
-            </Button>
-          </Box>
-        </Container>
-      </Layout>
-    );
-  }
-  
   return (
     <Layout>
       <Container maxWidth="md">
@@ -190,6 +253,78 @@ const UploadFiles: React.FC = () => {
             Upload Content
           </Typography>
         </Box>
+        
+        {/* Project and Folder Selection Panel */}
+        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            <FolderIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+            Select Destination
+          </Typography>
+          
+          {submitError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {submitError}
+            </Alert>
+          )}
+          
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="project-select-label">Project</InputLabel>
+                <Select
+                  labelId="project-select-label"
+                  value={projectId || ''}
+                  label="Project"
+                  onChange={handleProjectChange}
+                  disabled={isLoading}
+                >
+                  {projects.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      No projects available
+                    </MenuItem>
+                  ) : (
+                    projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+              
+              <FormControl fullWidth>
+                <InputLabel id="folder-select-label">Folder</InputLabel>
+                <Select
+                  labelId="folder-select-label"
+                  value={folderId || ''}
+                  label="Folder"
+                  onChange={handleFolderChange}
+                  disabled={!projectId || isFolderLoading}
+                >
+                  {isFolderLoading ? (
+                    <MenuItem value="" disabled>
+                      Loading folders...
+                    </MenuItem>
+                  ) : folders.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      No folders available in this project
+                    </MenuItem>
+                  ) : (
+                    folders.map((folder) => (
+                      <MenuItem key={folder._id} value={folder._id}>
+                        {folder.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
+        </Paper>
         
         <Paper elevation={2} sx={{ p: 3 }}>
           <Tabs 
@@ -234,58 +369,74 @@ const UploadFiles: React.FC = () => {
             </Typography>
             
             {submitSuccess && (
-              <Alert severity="success" sx={{ mb: 3 }}>
+              <Alert 
+                severity="success" 
+                sx={{ mb: 3 }}
+                action={
+                  <Button 
+                    color="inherit" 
+                    size="small" 
+                    startIcon={<FolderOpenIcon />} 
+                    onClick={() => navigate(`/projects/${projectId}`)}
+                  >
+                    View in Project
+                  </Button>
+                }
+              >
+                <AlertTitle>Success</AlertTitle>
                 YouTube video added successfully!
               </Alert>
             )}
             
-            {submitError && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {submitError}
+            {!projectId ? (
+              <Alert severity="warning" sx={{ mb: 3 }}>
+                Please select a project above to add a YouTube video.
               </Alert>
+            ) : (
+              <>
+                <TextField
+                  label="YouTube URL"
+                  fullWidth
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  margin="normal"
+                  required
+                />
+                
+                <TextField
+                  label="Title"
+                  fullWidth
+                  value={youtubeTitle}
+                  onChange={(e) => setYoutubeTitle(e.target.value)}
+                  placeholder="Enter a title for this video"
+                  margin="normal"
+                  required
+                />
+                
+                <TextField
+                  label="Tags (comma separated)"
+                  fullWidth
+                  value={youtubeTags}
+                  onChange={(e) => setYoutubeTags(e.target.value)}
+                  placeholder="tutorial, guitar, lesson"
+                  margin="normal"
+                />
+                
+                <Box sx={{ mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<YouTubeIcon />}
+                    onClick={handleYoutubeSubmit}
+                    disabled={!youtubeUrl.trim() || !youtubeTitle.trim() || !projectId}
+                    fullWidth
+                  >
+                    Add YouTube Video
+                  </Button>
+                </Box>
+              </>
             )}
-            
-            <TextField
-              label="YouTube URL"
-              fullWidth
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
-              margin="normal"
-              required
-            />
-            
-            <TextField
-              label="Title"
-              fullWidth
-              value={youtubeTitle}
-              onChange={(e) => setYoutubeTitle(e.target.value)}
-              placeholder="Enter a title for this video"
-              margin="normal"
-              required
-            />
-            
-            <TextField
-              label="Tags (comma separated)"
-              fullWidth
-              value={youtubeTags}
-              onChange={(e) => setYoutubeTags(e.target.value)}
-              placeholder="tutorial, guitar, lesson"
-              margin="normal"
-            />
-            
-            <Box sx={{ mt: 3 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<YouTubeIcon />}
-                onClick={handleYoutubeSubmit}
-                disabled={!youtubeUrl.trim() || !youtubeTitle.trim()}
-                fullWidth
-              >
-                Add YouTube Video
-              </Button>
-            </Box>
           </TabPanel>
         </Paper>
       </Container>

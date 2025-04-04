@@ -12,7 +12,9 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Alert
+  Alert,
+  AlertTitle,
+  Link
 } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
@@ -21,9 +23,11 @@ import {
   MusicNote as MusicNoteIcon,
   Image as ImageIcon,
   Add as AddIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  FolderOpen as FolderOpenIcon
 } from '@mui/icons-material';
 import { filesAPI } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface FileUploadProps {
   folderId: string;
@@ -40,6 +44,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderId, projectId, onUploadCo
   const [tagInput, setTagInput] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -133,6 +138,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderId, projectId, onUploadCo
     }
   };
   
+  const handleGoToFolder = () => {
+    if (folderId && projectId) {
+      navigate(`/projects/${projectId}?folder=${folderId}`);
+    }
+  };
+  
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
@@ -140,7 +151,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ folderId, projectId, onUploadCo
       </Typography>
       
       {uploadSuccess && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert 
+          severity="success" 
+          sx={{ mb: 2 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              startIcon={<FolderOpenIcon />} 
+              onClick={handleGoToFolder}
+            >
+              View in Folder
+            </Button>
+          }
+        >
+          <AlertTitle>Success</AlertTitle>
           Files uploaded successfully!
         </Alert>
       )}

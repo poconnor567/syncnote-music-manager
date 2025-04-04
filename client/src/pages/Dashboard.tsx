@@ -42,9 +42,10 @@ import {
   YouTube as YouTubeIcon,
   Storage as StorageIcon,
   InfoOutlined as InfoIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  InsertDriveFile as InsertDriveFileIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { projectsAPI, foldersAPI } from '../services/api';
 import { Project, Folder, FileItem } from '../types';
 import Layout from '../components/Layout/Layout';
@@ -69,6 +70,8 @@ const Dashboard: React.FC = () => {
     fileTypes: {} as Record<string, number>,
     totalStorage: 0
   });
+  
+  const navigate = useNavigate();
   
   // Format file size for display
   const formatFileSize = (bytes: number) => {
@@ -701,7 +704,7 @@ const Dashboard: React.FC = () => {
                 to="/search"
                 sx={{ py: 1 }}
               >
-                Search Files
+                SyncNote Search
               </Button>
             </Grid>
           </Grid>
@@ -821,96 +824,32 @@ const Dashboard: React.FC = () => {
                       <Chip 
                         size="small" 
                         icon={<FolderIcon />} 
-                        label={`${project.folders?.length || 0} folders`} 
-                        sx={{ mr: 1, mb: 1 }} 
+                        label={`${project.folders?.length || 0} folders`}
+                        sx={{ mr: 1 }}
                       />
                       <Chip 
                         size="small" 
-                        icon={<PdfIcon />} 
-                        label={`${project.folders?.reduce((sum, folder) => {
-                          if (typeof folder === 'object' && folder !== null) {
-                            return sum + (folder.files?.length || 0);
-                          }
-                          return sum;
-                        }, 0) || 0} files`} 
-                        sx={{ mb: 1 }} 
+                        icon={<InsertDriveFileIcon />} 
+                        label={`${project.files?.length || 0} files`}
                       />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        Last updated: {formatDate(project.updatedAt)}
-                      </Typography>
                     </Box>
                   </CardContent>
-                  <CardActions>
+                  <CardActions sx={{ pt: 0, justifyContent: 'flex-end' }}>
                     <Button 
                       size="small" 
-                      component={Link} 
-                      to={`/projects/${project._id}`}
+                      onClick={() => navigate(`/projects/${project._id}`)}
                     >
-                      Open
+                      Open Project
                     </Button>
-                    <Button 
-                      size="small" 
-                      component={Link} 
-                      to={`/projects/${project._id}/edit`}
-                    >
-                      Edit
-                    </Button>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleDeleteProject(project._id, e)}
-                      color="error"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
                   </CardActions>
                 </Card>
               ))}
             </Box>
           </Box>
         )}
-
-        {/* Create Project Dialog */}
-        <Dialog open={openDialog} onClose={handleCloseDialog}>
-          <DialogTitle>Create New Project</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="Project Name"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-            />
-            <TextField
-              margin="dense"
-              id="description"
-              label="Description (Optional)"
-              type="text"
-              fullWidth
-              variant="outlined"
-              multiline
-              rows={3}
-              value={newProjectDescription}
-              onChange={(e) => setNewProjectDescription(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button 
-              onClick={handleCreateProject} 
-              variant="contained"
-              disabled={!newProjectName.trim()}
-            >
-              Create
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
     </Layout>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import Projects from './pages/Projects';
 import UploadFiles from './pages/UploadFiles';
 import Record from './pages/Record';
+import Search from './pages/Search';
 
 // Create a theme
 const theme = createTheme({
@@ -72,6 +73,7 @@ function App() {
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
               <Route path="/upload" element={<UploadFiles />} />
               <Route path="/record" element={<Record />} />
+              <Route path="/search" element={<Search />} />
               {/* Add more protected routes here */}
             </Route>
             

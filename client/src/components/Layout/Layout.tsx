@@ -97,7 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children, window }) => {
             <ListItemIcon>
               <SearchIcon />
             </ListItemIcon>
-            <ListItemText primary="Search" />
+            <ListItemText primary="SyncNote Search" secondary="Find projects, folders & files" />
           </ListItemButton>
         </ListItem>
       </List>
